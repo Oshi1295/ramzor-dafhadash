@@ -49,7 +49,7 @@ for f in files1:
     banks1.append((f, bank_name))
 
 st.subheader("⬆️ לקוח/ה 2")
-files2 = st.file_uploader("העלה קבצי עו"ש", type="pdf", accept_multiple_files=True, key="bank2")
+files2 = st.file_uploader('העלה קבצי עו"ש', type="pdf", accept_multiple_files=True, key="bank2")
 banks2 = []
 for f in files2:
     bank_name = st.selectbox(f"בחר את הבנק עבור {f.name}", ["בנק הפועלים", "בנק לאומי", "בנק דיסקונט", "מזרחי טפחות", "הבנק הבינלאומי", "מרכנתיל", "יהב", "אוצר החייל"], key=f"b_{f.name}")
