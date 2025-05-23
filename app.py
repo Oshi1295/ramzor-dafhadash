@@ -39,17 +39,94 @@ will_change = st.radio("האם צפוי שינוי במצב הכלכלי בשנ�
 
 st.markdown("---")
 
+# ניתוח קבצים
+if credit_file and (files1 or files2):
+    st.subheader("🔎 סיכום ניתוח כלכלי")
+    all_bank_files = banks1 + banks2
+    all_rows = []
+    for pdf, bank_name in all_bank_files:
+        df, _ = parse_bank_pdf(pdf)  # תוכל להרחיב לפי bank_name בהמשך
+        if not df.empty:
+            all_rows.append(df)
+
+    if all_rows:
+        bank_df = pd.concat(all_rows)
+        bank_df["תאריך"] = pd.to_datetime(bank_df["תאריך"], dayfirst=True, errors='coerce')
+        bank_df = bank_df.sort_values("תאריך")
+
+        # פילוח הכנסות והוצאות
+        income_df = bank_df[bank_df.signed_amount > 0]
+        expense_df = bank_df[bank_df.signed_amount < 0]
+        total_income = income_df.signed_amount.sum()
+        total_expense = expense_df.signed_amount.sum()
+        net_flow = total_income + total_expense
+
+        st.write(f"**סה\"כ הכנסות:** {total_income:,.0f} ש"ח")
+        st.write(f"**סה\"כ הוצאות:** {-total_expense:,.0f} ש"ח")
+        st.write(f"**תזרים חודשי נטו:** {net_flow:,.0f} ש"ח")
+
+        # גרף תזרים לאורך זמן
+        trend = bank_df.groupby("תאריך")["signed_amount"].sum().cumsum()
+        fig = px.line(trend, title="📈 תנועת חשבון לאורך זמן", labels={"value": "יתרה מצטברת", "תאריך": "תאריך"})
+        st.plotly_chart(fig, use_container_width=True)
+
+        # גרפי עוגה
+        pie1 = px.pie(expense_df, values="signed_amount", names="תיאור", title="פילוח הוצאות")
+        pie2 = px.pie(income_df, values="signed_amount", names="תיאור", title="פילוח הכנסות")
+        st.plotly_chart(pie1, use_container_width=True)
+        st.plotly_chart(pie2, use_container_width=True)
+
+    # ניתוח דוח אשראי
+    credit_df, credit_summary = parse_credit_pdf(credit_file)
+    total_debt = credit_summary['total_debt']
+    yearly_income = income_slider * 12
+    ratio = total_debt / yearly_income if yearly_income > 0 else 0
+    st.write(f"**סה\"כ חוב:** {total_debt:,.0f} ש"ח")
+    st.write(f"**יחס חוב להכנסה שנתית:** {ratio:.2f}")
+
+    # רמזור
+    if ratio < 1:
+        color = "🟢 מצב תקין"
+    elif ratio < 2:
+        color = "🟡 בינוני"
+    else:
+        color = "🔴 בסיכון"
+    st.write(f"**רמזור:** {color}")
+
+    with st.expander("📄 דוח נתוני אשראי"):
+        st.dataframe(credit_df)
+
+    # יצירת PDF
+    st.subheader("📄 הורד סיכום PDF")
+    if st.button("📥 הורד דוח מסכם"):
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Arial", size=14)
+        pdf.cell(200, 10, txt="רמזור דף חדש - סיכום", ln=1, align="C")
+        pdf.set_font("Arial", size=12)
+        pdf.multi_cell(0, 10, txt=f"\nהכנסה: {income_slider}\nהוצאה: {expenses_slider}\nתזרים נטו: {net_flow:,.0f}\nסה\"כ חוב: {total_debt:,.0f}\nיחס חוב/הכנסה: {ratio:.2f}\nרמזור: {color}")
+        pdf.cell(200, 10, txt="חתימה: עמותת דף חדש", ln=1, align="R")
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            pdf.output(tmp.name)
+            with open(tmp.name, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode()
+                href = f'<a href="data:application/pdf;base64,{b64}" download="סיכום_רמזור.pdf">📄 לחץ כאן להורדת הסיכום</a>'
+                st.markdown(href, unsafe_allow_html=True)
+else:
+    st.info("יש להעלות לפחות קובץ אחד של דוח אשראי + קבצי עו\"ש כדי להפיק ניתוח.")
+
 # העלאת קבצים לפי בני זוג
 st.header("📤 העלאת קבצים - בן/בת זוג")
 st.subheader("⬆️ לקוח/ה 1")
-files1 = st.file_uploader('העלה קבצי עו"ש', type="pdf", accept_multiple_files=True, key="bank1")
+files1 = st.file_uploader("העלה קבצי עו"ש", type="pdf", accept_multiple_files=True, key="bank1")
 banks1 = []
 for f in files1:
     bank_name = st.selectbox(f"בחר את הבנק עבור {f.name}", ["בנק הפועלים", "בנק לאומי", "בנק דיסקונט", "מזרחי טפחות", "הבנק הבינלאומי", "מרכנתיל", "יהב", "אוצר החייל"], key=f.name)
     banks1.append((f, bank_name))
 
 st.subheader("⬆️ לקוח/ה 2")
-files2 = st.file_uploader('העלה קבצי עו"ש', type="pdf", accept_multiple_files=True, key="bank2")
+files2 = st.file_uploader("העלה קבצי עו"ש", type="pdf", accept_multiple_files=True, key="bank2")
 banks2 = []
 for f in files2:
     bank_name = st.selectbox(f"בחר את הבנק עבור {f.name}", ["בנק הפועלים", "בנק לאומי", "בנק דיסקונט", "מזרחי טפחות", "הבנק הבינלאומי", "מרכנתיל", "יהב", "אוצר החייל"], key=f"b_{f.name}")
@@ -58,3 +135,4 @@ for f in files2:
 credit_file = st.file_uploader("העלה דוח נתוני אשראי (PDF)", type="pdf", key="credit")
 
 st.markdown("---")
+
