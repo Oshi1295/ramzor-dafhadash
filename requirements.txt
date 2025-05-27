@@ -1,6 +1,5 @@
 streamlit
 pandas
-matplotlib
+plotly
 fpdf
 pymupdf
-plotly
