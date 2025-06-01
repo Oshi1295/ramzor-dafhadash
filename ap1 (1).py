@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
+st.set_page_config(layout="wide", page_title="מומחה כלכלת המשפחה GPT", page_icon="💰")
+
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
@@ -9,36 +11,19 @@ import re
 import io
 import traceback
 import numpy as np
-
-# PDF Parsing libraries
-import pymupdf as fitz # PyMuPDF, Hapoalim & Credit Report
-import pdfplumber # Leumi & Discount
-
+import pymupdf as fitz
+import pdfplumber
 from openai import OpenAI
-from openai import APIError # Specific import for API errors
-# Import specific OpenAI error types for more granular handling
-# from openai import AuthenticationError, PermissionDeniedError, RateLimitError, APIConnectionError, InternalServerError
 
 # --- Logging Setup ---
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # --- OpenAI Client Setup ---
-client = None # Initialize client to None
 try:
-    # Attempt to get API key from secrets
-    api_key = st.secrets["OPENAI_API_KEY"]
-    if api_key: # Check if key exists and is not empty
-       client = OpenAI(api_key=api_key)
-       logging.info("OpenAI client initialized successfully.")
-    else:
-       logging.warning("OPENAI_API_KEY found in secrets but is empty.")
-       st.error("מפתח OpenAI לא הוגדר כהלכה. שירות הצ'אט אינו זמין.")
-
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 except Exception as e:
-    logging.error(f"Error loading OpenAI API key or initializing client: {e}", exc_info=True)
-    st.error(f"שגיאה בטעינת מפתח OpenAI או בהפעלת שירות הצ'אט: {e}. הצ'אטבוט עשוי לא לפעול כראוי.")
-    # Client remains None
-
+    st.error(f"שגיאה בטעינת מפתח OpenAI: {e}. אנא ודא שהוא מוגדר נכון ב-st.secrets.")
+    client = None
 
 # --- Helper Functions (Keep existing ones, assumed correct) ---
 def clean_number_general(text):
