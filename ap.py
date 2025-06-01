@@ -459,7 +459,6 @@ def extract_credit_data_final_v13(pdf_content_bytes, filename_for_logging="credi
     return df
 
 # --- Streamlit App ---
-st.set_page_config(layout="wide", page_title="מומחה כלכלת המשפחה GPT", page_icon="💰")
 st.title("💰 צ'אטבוט מומחה לכלכלת המשפחה")
 st.markdown("העלה את דוחות הבנק ודוח נתוני האשראי שלך, ספק הכנסה חודשית, וקבל ניתוח פיננסי וייעוץ.")
 
