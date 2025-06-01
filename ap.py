@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 import streamlit as st
+st.set_page_config(layout="wide", page_title="מומחה כלכלת המשפחה GPT", page_icon="💰")
+
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
