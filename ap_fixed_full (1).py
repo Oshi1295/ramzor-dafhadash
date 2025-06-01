@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
+st.set_page_config(layout="wide", page_title="מומחה כלכלת המשפחה GPT", page_icon="📊")
 
 st.set_page_config(
     layout="wide",
