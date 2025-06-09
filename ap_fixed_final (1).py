@@ -512,7 +512,7 @@ with st.sidebar:
                     st.session_state.df_bank = extract_and_parse_discont_pdf(bank_file_bytes, uploaded_bank_file.name)
                 
                 if st.session_state.df_bank.empty:
-                    st.warning(f"לא הצלחנו לחלץ נתונים מדוח הבנק ({selected_bank_type})
+                    st.warning(f"לא הצלחנו לנתח נתונים מדוח הבנק ({selected_bank_type})")
     st.markdown("💡 **תשובה זו הינה בגדר המלצה , נא לפנות לבעל מקצוע או לעמותת דף חדש**"). אנא בדוק את הקובץ או נסה סוג אחר.")
                 else:
                     st.success(f"דוח בנק ({selected_bank_type})
